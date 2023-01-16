@@ -7,7 +7,7 @@ class ModelWeightedSum():
     """
     Weighted Sum model.
     """
-    def __init__(self, model_parameters = []):
+    def __init__(self, model_parameters):
         """
         Parameters
         ----------
@@ -117,7 +117,7 @@ class ModelOWA():
     Ordered Weighted Averaging model.
     """
     
-    def __init__(self, model_parameters = []):
+    def __init__(self, model_parameters):
         """
         Parameters
         ----------
