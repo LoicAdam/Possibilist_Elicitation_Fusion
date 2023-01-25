@@ -317,7 +317,7 @@ def possibilist_elicitation(alternatives, model, confidence, t_norm = 'product',
                 if side == 1:
                     polytope.add_answer(new_constraint_a, new_constraint_b, 1, t_norm)
                 else:
-                    polytope.add_answer(-new_constraint_a, new_constraint_b, 1-confidence[ite], t_norm)
+                    polytope.add_answer(-new_constraint_a, -new_constraint_b, 1-confidence[ite], t_norm)
                                     
                 if polytope.get_possibility() > min_possibility:
                     new_polytope_list.append(polytope)
@@ -480,7 +480,7 @@ def possibilist_elicitation_random(alternatives, model, confidence, t_norm = 'pr
                 if side == 1:
                     polytope.add_answer(new_constraint_a, new_constraint_b, 1, t_norm)
                 else:
-                    polytope.add_answer(-new_constraint_a, new_constraint_b, 1-confidence[ite], t_norm)
+                    polytope.add_answer(-new_constraint_a, -new_constraint_b, 1-confidence[ite], t_norm)
                                     
                 if polytope.get_possibility() > min_possibility:
                     new_polytope_list.append(polytope)
