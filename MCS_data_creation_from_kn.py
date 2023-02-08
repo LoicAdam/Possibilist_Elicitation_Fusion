@@ -77,7 +77,7 @@ if __name__ == '__main__':
     
     if not os.path.exists('data/' + elicitation_type + '/'):
         os.makedirs('data/' + elicitation_type + '/')
-    with open('data/' + elicitation_type + 'mcs_' + conf_type + '.pk','wb') as f:
+    with open('data/' + elicitation_type + '/mcs_' + conf_type + '.pk','wb') as f:
         
         d = {}
         d['res_zero'] = res_zero

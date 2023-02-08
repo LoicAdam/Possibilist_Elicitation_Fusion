@@ -11,7 +11,7 @@ import multiprocessing
 from multiprocessing import Value
 import numpy as np
 from alternatives.data_preparation import generate_alternatives_score
-from elicitation.elicitation import possibilist_elicitation, robust_elicitation, possibilist_elicitation_random, robust_elicitation_random
+from elicitation.elicitation import possibilist_elicitation, robust_elicitation
 from elicitation.models import ModelWeightedSum
 from fusion.l_out_n import find_incorrect_answers, k_among_n_fusion, new_optimal_recommendation
 
@@ -22,14 +22,8 @@ nb_alternatives = 50
 t_norm = 'product'
 conf_type = 'uniform'
 elicitation_type = 'random'
-
-if elicitation_type == 'random':
-    f_elicitation_possibilist = possibilist_elicitation_random
-    f_elicitation = robust_elicitation_random
-else:
-    f_elicitation_possibilist = possibilist_elicitation
-    f_elicitation = robust_elicitation
-    
+question_type = 'random'
+  
 def init_globals(counter):
     global cnt
     cnt = counter
@@ -59,7 +53,7 @@ def conf_set():
         
 def elicitation_classic(alternatives, model_values, rational):
     model = ModelWeightedSum(model_values)
-    res = f_elicitation(alternatives, model, max_iter = nb_questions,
+    res = robust_elicitation(alternatives, model, max_iter = nb_questions,
                              rational = rational)    
     with cnt.get_lock():
         cnt.value += 1
@@ -69,9 +63,9 @@ def elicitation_classic(alternatives, model_values, rational):
 
 def elicitation_possibilist_zero(alternatives, model_values, confidence_values, rational):
     model = ModelWeightedSum(model_values)
-    res = f_elicitation_possibilist(alternatives, model, confidence_values, t_norm,
-                                 max_iter = nb_questions, rational = rational,
-                                 inconsistency_type = 'zero')
+    res = possibilist_elicitation(alternatives, model, confidence_values, t_norm,
+                                  max_iter = nb_questions, rational = rational,
+                                  inconsistency_type = 'zero', question_type = question_type)
     with cnt.get_lock():
         cnt.value += 1
         print(cnt.value)
@@ -80,9 +74,9 @@ def elicitation_possibilist_zero(alternatives, model_values, confidence_values, 
 
 def elicitation_possibilist_maximum(alternatives, model_values, confidence_values, rational):
     model = ModelWeightedSum(model_values)
-    res = f_elicitation_possibilist(alternatives, model, confidence_values, t_norm,
-                                 max_iter = nb_questions, rational = rational,
-                                 inconsistency_type = 'maximum')
+    res = possibilist_elicitation(alternatives, model, confidence_values, t_norm,
+                                  max_iter = nb_questions, rational = rational,
+                                  inconsistency_type = 'maximum', question_type = question_type)
     with cnt.get_lock():
         cnt.value += 1
         print(cnt.value)
@@ -114,14 +108,16 @@ if __name__ == '__main__':
     
     number_of_workers = np.minimum(np.maximum(multiprocessing.cpu_count() - 2,1), 30)
 
-    start_time = time.time()
-    cnt = Value('i', 0)
-    with multiprocessing.Pool(initializer=init_globals, initargs=(cnt,), processes=number_of_workers) as pool:
-        elicitation_classic = pool.starmap(elicitation_classic, zip(alternatives_all, model_values_all, rational_all))
-    sys.stdout.flush()
-    pool.close()
-    pool.join()
-    print("Temps classique : ", time.time() - start_time)
+    if elicitation_type == "css":
+        
+        start_time = time.time()
+        cnt = Value('i', 0)
+        with multiprocessing.Pool(initializer=init_globals, initargs=(cnt,), processes=number_of_workers) as pool:
+            elicitation_classic = pool.starmap(elicitation_classic, zip(alternatives_all, model_values_all, rational_all))
+        sys.stdout.flush()
+        pool.close()
+        pool.join()
+        print("Temps classique : ", time.time() - start_time)
 
     ###
     
@@ -179,7 +175,8 @@ if __name__ == '__main__':
         d['model'] = model_values_all
         d['confidence'] = confidence_values_all
         d['rational'] = rational_all
-        d['elicitation_classic'] = elicitation_classic
+        if elicitation_type == "css":
+            d['elicitation_classic'] = elicitation_classic
         d['elicitation_zero'] = elicitation_zero
         d['elicitation_maximum'] = elicitation_maximum
         d['k_n_zero'] = elicitation_k_n_zero

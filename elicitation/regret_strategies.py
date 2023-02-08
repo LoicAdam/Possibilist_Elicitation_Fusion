@@ -162,14 +162,14 @@ class RandomStrategy():
         self._visited_pairs[alt_idx_1,alt_idx_2] = 1
         self._visited_pairs[alt_idx_2,alt_idx_1] = 1
         
-    def get_best_alternative(self, values_max):
+    def get_best_alternative(self, mr):
         """
-        Get the best alternative according to the max
+        Get the best alternative according to the MR
 
         Parameters
         ----------
-        values_max : list
-            All the max.
+        mr : array_like
+            MR.
 
         Returns
         -------
@@ -177,21 +177,24 @@ class RandomStrategy():
             The best alternative.
         best_alt_id : integrer
             Its indice.
+        regret_best : float
+            The regret.
 
         """
-        mr_sorted = np.argsort(values_max)
+        mr_sorted = np.argsort(mr)
         best_alt_id = mr_sorted[0]
         best_alt = self._alternatives[best_alt_id]
-        return best_alt, best_alt_id
+        regret_best = mr[best_alt_id]
+        return best_alt, best_alt_id, regret_best
         
-    def give_candidate(self, nb_alternatives):
+    def give_candidate(self, mr):
         """
         Get a candidate (random).
 
         Parameters
         ----------
-        nb_alternatives : integer
-            Number of alternatives.
+        mr : array_like
+            MR.
 
         Returns
         -------
@@ -202,7 +205,7 @@ class RandomStrategy():
 
         """
         candidate_alt_id = -1
-        alternatives_random = np.arange(0, nb_alternatives)
+        alternatives_random = np.arange(0, self._nb_alternatives)
         np.random.shuffle(alternatives_random)
         for i in alternatives_random:
             if not np.all(self._visited_pairs[i,:] == 1):
@@ -211,14 +214,14 @@ class RandomStrategy():
         candidate_alt = self._alternatives[candidate_alt_id]
         return candidate_alt, candidate_alt_id
     
-    def give_oponent(self, nb_alternatives, candidate_alt_id):
+    def give_oponent(self, pmr, candidate_alt_id):
         """
         Get a random opponent
 
         Parameters
         ----------
-        nb_alternatives : integer
-            The number of alternatives.
+        pmr : array_like
+            The PMR.
         candidate_alt_id : integer
             The indice of the candidate alternative.
 
@@ -231,7 +234,7 @@ class RandomStrategy():
 
         """
         worst_alt_id = -1        
-        alternatives_random = np.arange(0, nb_alternatives)
+        alternatives_random = np.arange(0, self._nb_alternatives)
         np.random.shuffle(alternatives_random)
         for j in alternatives_random:
             if self._visited_pairs[candidate_alt_id,j] != 1:

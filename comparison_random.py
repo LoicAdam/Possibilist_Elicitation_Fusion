@@ -12,7 +12,7 @@ import tikzplotlib
 if __name__ == '__main__':
     
     elicitation_type = "random/"
-    data_type = "weak"
+    data_type = "uniform"
     
     if not os.path.exists("results/" + elicitation_type + data_type):
         os.makedirs("results/" + elicitation_type + data_type)
@@ -107,11 +107,11 @@ if __name__ == '__main__':
  
     data_inconsistency_non_zero = []
     data_inconsistency_non_zero = [mmr_real_zero[inconsistency_before_zero != 0],
-                     mmr_real_k_n_zero[inconsistency_before_zero != 0],
-                     mmr_mcs_zero[inconsistency_before_zero != 0],
-                     mmr_real_maximum[inconsistency_before_maximum != 0],
-                     mmr_real_k_n_maximum[inconsistency_before_maximum != 0],
-                     mmr_mcs_maximum[inconsistency_before_maximum != 0]]
+                                   mmr_real_k_n_zero[inconsistency_before_zero != 0],
+                                   mmr_mcs_zero[inconsistency_before_zero != 0],
+                                   mmr_real_maximum[inconsistency_before_maximum != 0],
+                                   mmr_real_k_n_maximum[inconsistency_before_maximum != 0],
+                                   mmr_mcs_maximum[inconsistency_before_maximum != 0]]
     
     fig, ax = plt.subplots()
     ax.boxplot(data_inconsistency_non_zero)
@@ -168,8 +168,8 @@ if __name__ == '__main__':
     plt.savefig('results/' + elicitation_type + data_type + '/compare_high.png', dpi=300)
     
     gain_knn_zero = data_inconsistency_non_zero[0] - data_inconsistency_non_zero[1]
-    gain_knn_max = data_inconsistency_non_zero[3] - data_inconsistency_non_zero[2]
-    gain_mcs_zero = data_inconsistency_non_zero[0] - data_inconsistency_non_zero[4]
+    gain_knn_max = data_inconsistency_non_zero[3] - data_inconsistency_non_zero[4]
+    gain_mcs_zero = data_inconsistency_non_zero[0] - data_inconsistency_non_zero[2]
     gain_mcs_max = data_inconsistency_non_zero[3] - data_inconsistency_non_zero[5]
     
     fig, ax = plt.subplots()
