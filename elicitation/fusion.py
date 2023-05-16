@@ -35,7 +35,7 @@ def tnorm(information, fusion_rule = "product"):
             luk = np.maximum(0, luk + info - 1)
         return luk
     raise NotImplementedError(fusion_rule, 'is an unknown rule.')
-        
+
 def tconorm(information, fusion_rule = "probabilistic"):
     """T-Conorm of pieces of information.
 

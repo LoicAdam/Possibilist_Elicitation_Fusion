@@ -2,8 +2,8 @@
 """This module gives tools to have the 'best' MCS."""
 
 import itertools
-import copy
 import numpy as np
+from elicitation.fusion import tnorm
 
 def get_answers(polytope_list, nb_questions):
     """
@@ -21,28 +21,59 @@ def get_answers(polytope_list, nb_questions):
     list
         All the answers.
 
-    """    
+    """
     all_answers = np.zeros((len(polytope_list), nb_questions))
     for i in range(0, len(polytope_list)):
         all_answers[i,:] = polytope_list[i].get_answers()
     return all_answers
 
-def conf_answers(answers):
+def is_subset_element_in_list(element, list_to_check):
+    '''
+    Check if an element is inside the list.
+
+    Parameters
+    ----------
+    element : tuple
+        Element.
+    list_to_check : list of tuple
+        List of elements.
+
+    Returns
+    -------
+    bool
+        Is inside the list or not.
+
+    '''
+    for element_to_check in list_to_check:
+        if set(element).issubset(set(element_to_check)):
+            return True
+    return False
+
+def find_all_maximum_coherent_subsets(answers, n):
     """
-    Determine the confidence degrees from the answers.
+    Find all the coherent subsets regardless of size.
 
     Parameters
     ----------
     answers : list
         The answers.
+    n : integer
+        The number of answers.
 
     Returns
     -------
-    interger
-        The confidence degrees.
+    list
+        List of coherent subsets.
 
     """
-    return np.min(answers, axis = 0)
+    mcs_list = []
+    combs_k = list(itertools.chain(*[itertools.combinations(range(0,n),k) for k in range(n,0,-1)]))
+    for comb_k in combs_k:
+        selected_answers = answers[:,list(comb_k)]
+        if (selected_answers == np.ones(len(comb_k))).all(1).any():
+            if is_subset_element_in_list(comb_k, mcs_list) is False:
+                mcs_list.append(list(comb_k))
+    return mcs_list
 
 def find_coherent_subsets(answers, k, n):
     """
@@ -102,14 +133,14 @@ def find_best_cs(cs_list, conf_list):
     best_cs = cs_list[np.argmax(average_conf)]
     return best_cs
 
-def update_polytope_list(polytope_list, best_cs, tnorm_rule = "product"):
+def update_possibility_list(all_answers, best_cs, tnorm_rule = "product"):
     """
-    Update the list of polytopes according to the best coherent subset.
+    Update the list of possibikity according to the best coherent subset.
 
     Parameters
     ----------
-    polytope_list : list
-        List of polytopes.
+    all_answers : list
+        List of answers.
     best_cs : array_like
         Best coherent subset.
     tnorm_rule : string, optional
@@ -118,25 +149,11 @@ def update_polytope_list(polytope_list, best_cs, tnorm_rule = "product"):
     Returns
     -------
     list
-        The updated polytope list.
-    list
         The updated confidence degrees list.
-
     """
-    new_polytope_list = []
-    possibility_list = []
-    answers_in_list = []
-    polytope_list_copy = copy.deepcopy(polytope_list)
-    for polytope in polytope_list_copy:
-        polytope.subset_answers(best_cs, tnorm_rule)
-        flag = 0
-        for answers_in in answers_in_list:
-            if polytope.get_answers() == answers_in:
-                flag = 1
-                break
-        if flag == 0:
-            new_polytope_list.append(polytope)
-            answers_in_list.append(polytope.get_answers())
-            possibility_list.append(polytope.get_possibility())
-    return new_polytope_list, possibility_list
-        
+    nb_polytopes = all_answers.shape[0]
+    possibility_list = np.zeros(nb_polytopes)
+    subset_answers = all_answers[:, best_cs]
+    for i in range(0, nb_polytopes):
+        possibility_list[i] = tnorm(subset_answers[i,:], tnorm_rule)
+    return possibility_list

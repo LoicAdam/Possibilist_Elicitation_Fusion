@@ -35,7 +35,7 @@ def get_choice(alternative_1, alternative_2, prob, model):
         res['accepted'] = not rational
     res['rational'] = rational
     return res
-        
+
 def get_choice_threshold(alternative_1, alternative_2, confidence, model, threshold = 0.8):
     """
     The DM is always making the good choice if the associated confidence degree
@@ -61,7 +61,7 @@ def get_choice_threshold(alternative_1, alternative_2, confidence, model, thresh
     """
     res = {}
     score_alt_1 = model.get_model_score(alternative_1)
-    score_alt_2 = model.get_model_score(alternative_2)  
+    score_alt_2 = model.get_model_score(alternative_2)
     res['rational'] = confidence >= threshold
     if score_alt_1 >= score_alt_2:
         res['accepted'] = confidence >= threshold

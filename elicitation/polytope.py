@@ -11,9 +11,9 @@ class Polytope:
     Represent an elementary polytope, a division of the model space, delimited
     by linear constrainsts.
     """
-    
-    def __init__(self, constraints_A_ub, constraints_b_ub, 
-                 constraints_A_eq, constraints_b_eq, 
+
+    def __init__(self, constraints_A_ub, constraints_b_ub,
+                 constraints_A_eq, constraints_b_eq,
                  bounds):
         """
         Parameters
@@ -36,28 +36,7 @@ class Polytope:
         self._constraints_A_eq = constraints_A_eq
         self._constraints_b_eq = constraints_b_eq
         self._bounds = bounds
-        
-    def subset_answers(self, best_cs, tnorm_rule = 'product'):
-        """
-        Keep a subset of answers
 
-        Parameters
-        ----------
-        best_cs : array_like
-            Coherent subset of answers we want.
-        tnorm_rule : string, optional
-            The T-norm to apply. The default is 'product'.
-
-        Returns
-        -------
-        None.
-
-        """
-        self._answers = np.array(self.get_answers())[best_cs].tolist()
-        self._possibility = tnorm(self.get_answers(), tnorm_rule)
-        self._constraints_A_ub = np.array(self._constraints_A_ub)[best_cs]
-        self._constraints_b_ub = np.array(self._constraints_b_ub)[best_cs]
-        
     def add_answer(self, constraint_A, constraint_b, confidence, tnorm_rule = 'minimum'):
         """
         Add a new answer properly
@@ -86,7 +65,7 @@ class Polytope:
             self._constraints_b_ub = np.vstack((self._constraints_b_ub, constraint_b))
         self._answers.append(confidence)
         self._possibility = tnorm([self._possibility,confidence],tnorm_rule)
-        
+
     def delete_answer(self, answer_id, fusion_rule = 'minimum'):
         """
         Removes an answer and update the possibility.
@@ -108,25 +87,25 @@ class Polytope:
         for i in range(1, len(self._answers)):
             possibility = tnorm([possibility, self._answers[i]], fusion_rule)
         self._possibility = possibility
-        
+
     def get_constrainsts(self):
         """
         Get the constrainsts.
         """
         return self._constraints_A_ub, self._constraints_b_ub, self._constraints_A_eq, self._constraints_b_eq
-    
+
     def get_bounds(self):
         """
         Get the bounds.
         """
         return self._bounds
-    
+
     def get_possibility(self):
         """
         Get the possibility.
         """
         return self._possibility
-    
+
     def get_answers(self):
         """
         Get the confidences of the answers related with the polytope.
@@ -161,7 +140,7 @@ def construct_constrainst(alt_1, alt_2, alt_1_prefered, model):
         new_constrainst_a = new_constrainst_a[np.newaxis,:]
     return np.asarray(new_constrainst_a), np.asarray(new_constraints_b)
 
-def isPolytopeNotEmpty(A_ub, b_ub, A_eq, b_eq, bounds):
+def is_polytope_not_empty(A_ub, b_ub, A_eq, b_eq, bounds):
     """
     Check if a polytope is not empty
 
@@ -187,14 +166,14 @@ def isPolytopeNotEmpty(A_ub, b_ub, A_eq, b_eq, bounds):
     if A_ub.ndim == 1:
         A_ub = A_ub[np.newaxis,:]
     if A_eq.ndim == 1:
-        A_eq = A_ub[np.newaxis,:]
+        A_eq = A_eq[np.newaxis,:]
     _, p = A_ub.shape
     if b_ub.ndim == 2:
         b_ub = b_ub[:,0]
     if b_eq.ndim == 2:
-        b_eq = b_ub[:,0]
+        b_eq = b_eq[:,0]
     c = np.ones((p,1))
-    linprog_res = linprog(c, A_ub, b_ub, A_eq, b_eq, bounds, 
+    linprog_res = linprog(c, A_ub, b_ub, A_eq, b_eq, bounds,
                           method = 'highs')
     return linprog_res.fun is not None
 
@@ -228,15 +207,30 @@ def intersection_checker(polytope, constrainst_a, constrainst_b):
         Amoins = np.vstack((Amoins, A_ub))
         bplus = np.vstack((bplus, b_ub))
         bmoins = np.vstack((bmoins, b_ub))
-    first_side = isPolytopeNotEmpty(Aplus, bplus, A_eq, b_eq, polytope_bounds)
-    second_side = isPolytopeNotEmpty(Amoins, bmoins, A_eq, b_eq, polytope_bounds)
+    first_side = is_polytope_not_empty(Aplus, bplus, A_eq, b_eq, polytope_bounds)
+    second_side = is_polytope_not_empty(Amoins, bmoins, A_eq, b_eq, polytope_bounds)
     if first_side and second_side :
         return 0
     if first_side:
         return 1
     if second_side:
         return -1
-    raise ValueError("One should return true")
+    
+    #Case it does not work: add some noise.
+    Aplus = Aplus + np.random.normal(0.0, 10**-8, size = Aplus.shape)
+    Amoins = Amoins + np.random.normal(0.0, 10**-8, size = Amoins.shape)
+    bplus = bplus + np.random.normal(0.0, 10**-8, size = bplus.shape)
+    bmoins = bmoins + np.random.normal(0.0, 10**-8, size = bmoins.shape)
+    first_side = is_polytope_not_empty(Aplus, bplus, A_eq, b_eq, polytope_bounds)
+    second_side = is_polytope_not_empty(Amoins, bmoins, A_eq, b_eq, polytope_bounds)
+    if first_side and second_side :
+        return 0
+    if first_side:
+        return 1
+    if second_side:
+        return -1
+    
+    return None #If fails.
 
 def cut_polytope(polytope, constrainst_a, constrainst_b, confidence = 1, fusion_rule = 'minimum'):
     """Seperate a polytope into two polytopes according to a constrainst Ax < b.
